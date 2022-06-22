@@ -4,7 +4,7 @@ import { Annotation, AnnotationList } from 'types';
 
 const makeAnnotationBlockRegex = (annotationId?: string) =>
     new RegExp(
-        '(?<annotationBlock>^\n(>.*?\n)*?>```annotation-json(\n>.*?)*?)\n\\^(?<annotationId>' +
+        '(?<annotationBlock>^\n(>.*?\n)*?>```annotation-json(\n>.*?)*?)\n> \\^(?<annotationId>' +
             (annotationId ?? '[a-zA-Z0-9]+') +
             ')\n',
         'gm'
@@ -48,13 +48,12 @@ const makeAnnotationContentRegex = () =>
             '```annotation-json\\n',
             '(?<annotationJson>(.|\\n)*?)\\n',
             '```\\n',
-            '%%(.|\\n)*?\\*',
-            '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
-            '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
-            '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
-            '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
-            '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
-            '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
+            '%%(.|\\n)*?',
+            '(?<tags>(.|\\n)*?)?( .\")',
+            '(?<highlight>(.|\\n)*?)?',
+            ' &rarr; ((?<link>(.|\\n)*?)\\n) ',
+            '((?<comment>(.|\\n)*)\\n)?',
+            '((.|\\n)*)?',
             '$'
         ].join(''),
         'g'
@@ -79,18 +78,18 @@ const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSetti
     const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
 
     const annotationString =
-        '%%\n```annotation-json' +
+        ' [!annotation]\n%%\n```annotation-json' +
         `\n${JSON.stringify(
             stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags))
         )}` +
-        '\n```\n%%\n' +
-        `*${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}%%HIGHLIGHT%%${
+        '\n```\n%%\n ' +
+        `\n ${annotation.tags.map(x => `#${x}`).join(', ')}\n \n *"${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}${
             highlightHighlightedText ? ' ==' : ''
         }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
             includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
-        }*\n%%LINK%%[[#^${annotation.id}|show annotation]]\n%%COMMENT%%\n${
+        }"*\n &rarr; [[#^${annotation.id}|Source]]\n \n ${
             annotation.text || ''
-        }\n%%TAGS%%\n${annotation.tags.map(x => `#${x}`).join(', ')}`;
+        }\n ^${annotation.id}`;     
 
     return (
         '\n' +
@@ -98,9 +97,7 @@ const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSetti
             .split('\n')
             .map(x => `>${x}`)
             .join('\n') +
-        '\n^' +
-        annotation.id +
-        '\n'
+            "\n"
     );
 };
 
