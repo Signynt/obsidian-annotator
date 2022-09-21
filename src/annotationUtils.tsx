@@ -51,7 +51,7 @@ const makeAnnotationContentRegex = () =>
             '%%(.|\\n)*?',
             '(?<tags>(.|\\n)*?)?( .\")',
             '(?<highlight>(.|\\n)*?)?',
-            ' &rarr; ((?<link>(.|\\n)*?)\\n) ',
+            ' → ((?<link>(.|\\n)*?)\\n) ',
             '((?<comment>(.|\\n)*)\\n)?',
             '((.|\\n)*)?',
             '$'
@@ -87,7 +87,7 @@ const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSetti
             highlightHighlightedText ? ' ==' : ''
         }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
             includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
-        }"*\n &rarr; [[#^${annotation.id}|Source]]\n \n ${
+        }"*\n → [[#^${annotation.id}|Source]]\n \n ${
             annotation.text || ''
         }\n ^${annotation.id}`;     
 
