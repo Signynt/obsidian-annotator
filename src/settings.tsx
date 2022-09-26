@@ -20,6 +20,11 @@ export interface AnnotatorSettings {
         highlightHighlightedText: boolean;
         includePostfix: boolean;
     };
+    customMarkdownSettings: {
+        useCustomMarkdown: boolean;
+        customMarkdownInput: string;
+        customMarkdownOutput: string;
+    };
     annotateTvUrl?: string;
     debugLogging: boolean;
 }
@@ -42,7 +47,13 @@ export const DEFAULT_SETTINGS: AnnotatorSettings = {
         includePrefix: true,
         highlightHighlightedText: true,
         includePostfix: true
+    },
+    customMarkdownSettings: {
+        useCustomMarkdown: false,
+        customMarkdownInput: '',
+        customMarkdownOutput: ''
     }
+
 };
 
 export interface IHasAnnotatorSettings {
@@ -166,6 +177,40 @@ export default class AnnotatorSettingsTab extends PluginSettingTab {
                         this.plugin.settings.annotationMarkdownSettings.highlightHighlightedText = value;
                         await this.plugin.saveSettings();
                     })
+            );
+
+        containerEl.createEl('h3', { text: 'Custom Markdown' });
+
+        new Setting(containerEl)
+            .setName('Use custom markdown')
+            .setDesc('Allows for custom formatting of the text displayed in markdown view.')
+            .addToggle(toggle =>
+                toggle
+                    .setValue(this.plugin.settings.customMarkdownSettings.useCustomMarkdown)
+                    .onChange(async value => {
+                        this.plugin.settings.customMarkdownSettings.useCustomMarkdown = value;
+                        await this.plugin.saveSettings();
+                    })
+            );
+
+        new Setting(containerEl)
+            .setName('Custom markdown format')
+            .setDesc('Custom input text:')
+            .addTextArea(text =>
+                text.setValue(this.plugin.settings.customMarkdownSettings.customMarkdownInput).onChange(async value => {
+                    this.plugin.settings.customMarkdownSettings.customMarkdownInput = value;
+                    await this.plugin.saveSettings();
+                })
+            );
+
+        new Setting(containerEl)
+            .setName('Custom markdown format')
+            .setDesc('Custom output text:')
+            .addTextArea(text =>
+                text.setValue(this.plugin.settings.customMarkdownSettings.customMarkdownOutput).onChange(async value => {
+                    this.plugin.settings.customMarkdownSettings.customMarkdownOutput = value;
+                    await this.plugin.saveSettings();
+                })
             );
 
         containerEl.createEl('h3', { text: 'Dark Mode Settings' });

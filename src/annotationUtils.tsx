@@ -76,21 +76,26 @@ export const getAnnotationHighlightTextData = (annotation: Annotation) => {
 
 const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSettings) => {
     const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
     const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
 
-    const annotationString =
-        '%%\n```annotation-json' +
-        `\n${JSON.stringify(
-            stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags))
-        )}` +
-        '\n```\n%%\n' +
-        `*${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}%%HIGHLIGHT%%${
-            highlightHighlightedText ? ' ==' : ''
-        }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
-            includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
-        }*\n%%LINK%%[[#^${annotation.id}|show annotation]]\n%%COMMENT%%\n${
-            annotation.text || ''
-        }\n%%TAGS%%\n${annotation.tags.map(x => `#${x}`).join(', ')}`;
+    //if (useCustomMarkdown === true) {
+        const annotationString =
+            '%%\n```annotation-json' +
+            `\n${JSON.stringify(
+                stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags))
+            )}` +
+            '\n```\n%%\n' +
+            `*${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}%%HIGHLIGHT%%${
+                highlightHighlightedText ? ' ==' : ''
+            }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
+                includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
+            }*\n%%LINK%%[[#^${annotation.id}|show annotation]]\n%%COMMENT%%\n${
+                annotation.text || ''
+            }\n%%TAGS%%\n${annotation.tags.map(x => `#${x}`).join(', ')}`;
+    //} else {
+    //    const annotationString = customMarkdownOutput;
+    //}
 
     return (
         '\n' +
