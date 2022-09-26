@@ -40,25 +40,64 @@ const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId:
     return { ...makeDefaultAnnotationObject(annotationId, annotation.tags), ...annotation };
 };
 
-const makeAnnotationContentRegex = () =>
-    new RegExp(
-        [
-            '(.|\\n)*?',
-            '%%\\n',
-            '```annotation-json\\n',
-            '(?<annotationJson>(.|\\n)*?)\\n',
-            '```\\n',
-            '%%(.|\\n)*?\\*',
-            '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
-            '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
-            '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
-            '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
-            '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
-            '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
-            '$'
-        ].join(''),
-        'g'
-    );
+// const customMarkdownDictionaryRegex = {
+//     annotator_json: `${JSON.stringify(stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags)))}`,
+//     annotator_tags: annotation.tags.map(x => `#${x}`).join(', '),
+//     annotator_comment: annotation.text,
+//     annotator_highlightedText: exact.trim(),
+//     annotator_prefix: `%%PREFIX%%${prefix.trim()}`,
+//     annotator_postfix: `%%POSTFIX%%${suffix.trim()}`,
+//     annotator_link: annotation.id,
+//     annotator_id: `^${annotation.id}`
+// };
+
+const makeAnnotationContentRegex = () => {
+    // const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
+    // const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
+    // const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
+
+    if (useCustomMarkdown) {
+            new RegExp(
+                [
+                    '(.|\\n)*?',
+                    '%%\\n',
+                    '```annotation-json\\n',
+                    '(?<annotationJson>(.|\\n)*?)\\n',
+                    '```\\n',
+                    '%%(.|\\n)*?\\*',
+                    '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
+                    '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
+                    '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
+                    '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
+                    '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
+                    '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
+                    '$'
+                ].join(''),
+                'g'
+          );
+
+    } else {
+            new RegExp(
+                [
+                    '(.|\\n)*?',
+                    '%%\\n',
+                    '```annotation-json\\n',
+                    '(?<annotationJson>(.|\\n)*?)\\n',
+                    '```\\n',
+                    '%%(.|\\n)*?\\*',
+                    '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
+                    '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
+                    '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
+                    '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
+                    '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
+                    '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
+                    '$'
+                ].join(''),
+                'g'
+          );
+    }
+
+}
 
 export const getAnnotationHighlightTextData = (annotation: Annotation) => {
     let prefix = '';
@@ -76,37 +115,50 @@ export const getAnnotationHighlightTextData = (annotation: Annotation) => {
 
 const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSettings) => {
     const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
-    const { useCustomMarkdown, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
     const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
 
-    //if (useCustomMarkdown === true) {
-        const annotationString =
-            '%%\n```annotation-json' +
-            `\n${JSON.stringify(
-                stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags))
-            )}` +
-            '\n```\n%%\n' +
-            `*${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}%%HIGHLIGHT%%${
-                highlightHighlightedText ? ' ==' : ''
-            }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
-                includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
-            }*\n%%LINK%%[[#^${annotation.id}|show annotation]]\n%%COMMENT%%\n${
-                annotation.text || ''
-            }\n%%TAGS%%\n${annotation.tags.map(x => `#${x}`).join(', ')}`;
-    //} else {
-    //    const annotationString = customMarkdownOutput;
-    //}
+    const customMarkdownDictionary = {
+        annotator_json: `${JSON.stringify(stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags)))}`,
+        annotator_tags: annotation.tags.map(x => `#${x}`).join(', '),
+        annotator_comment: annotation.text,
+        annotator_highlightedText: exact.trim(),
+        annotator_prefix: `%%PREFIX%%${prefix.trim()}`,
+        annotator_postfix: `%%POSTFIX%%${suffix.trim()}`,
+        annotator_link: annotation.id,
+        annotator_id: `^${annotation.id}`
+    };
 
-    return (
-        '\n' +
-        annotationString
-            .split('\n')
-            .map(x => `>${x}`)
-            .join('\n') +
-        '\n^' +
-        annotation.id +
-        '\n'
-    );
+    if (useCustomMarkdown) {
+        var annotationString = customMarkdownOutput.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionary[matched]);
+        return annotationString;
+
+    } else {
+      var annotationString =
+          '%%\n```annotation-json' +
+          `\n${JSON.stringify(
+              stripDefaultValues(annotation, makeDefaultAnnotationObject(annotation.id, annotation.tags))
+          )}` +
+          '\n```\n%%\n' +
+          `*${includePrefix ? `%%PREFIX%%${prefix.trim()}` : ''}%%HIGHLIGHT%%${
+              highlightHighlightedText ? ' ==' : ''
+          }${exact.trim()}${highlightHighlightedText ? '== ' : ''}${
+              includePostfix ? `%%POSTFIX%%${suffix.trim()}` : ''
+          }*\n%%LINK%%[[#^${annotation.id}|show annotation]]\n%%COMMENT%%\n${
+              annotation.text || ''
+          }\n%%TAGS%%\n${annotation.tags.map(x => `#${x}`).join(', ')}`;
+      return (
+          '\n' +
+          annotationString
+              .split('\n')
+              .map(x => `>${x}`)
+              .join('\n') +
+          '\n^' +
+          annotation.id +
+          '\n'
+      );
+    }
+
 };
 
 export function getAnnotationFromFileContent(annotationId: string, fileContent: string): Annotation {
