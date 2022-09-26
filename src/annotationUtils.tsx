@@ -10,8 +10,14 @@ const makeAnnotationBlockRegex = (annotationId?: string) =>
         'gm'
     );
 
-const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId: string): Annotation => {
-    const contentRegex = makeAnnotationContentRegex();
+const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId: string, plugin: IHasAnnotatorSettings): Annotation => {
+    const test = true;
+    if (test) {
+        var contentRegex = makeAnnotationContentRegex();
+    } else {
+        var contentRegex = makeAnnotationContentRegex();
+    }
+    //const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
     const content = annotationBlock
         .split('\n')
         .map(x => x.substr(1))
@@ -51,53 +57,49 @@ const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId:
 //     annotator_id: `^${annotation.id}`
 // };
 
-const makeAnnotationContentRegex = () => {
-    // const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
-    // const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
-    // const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
 
-    if (useCustomMarkdown) {
-            new RegExp(
-                [
-                    '(.|\\n)*?',
-                    '%%\\n',
-                    '```annotation-json\\n',
-                    '(?<annotationJson>(.|\\n)*?)\\n',
-                    '```\\n',
-                    '%%(.|\\n)*?\\*',
-                    '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
-                    '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
-                    '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
-                    '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
-                    '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
-                    '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
-                    '$'
-                ].join(''),
-                'g'
-          );
+const makeAnnotationContentRegexCustom = () =>
+// const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
+// const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
+// const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
+    new RegExp(
+        [
+            '(.|\\n)*?',
+            '%%\\n',
+            '```annotation-json\\n',
+            '(?<annotationJson>(.|\\n)*?)\\n',
+            '```\\n',
+            '%%(.|\\n)*?\\*',
+            '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
+            '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
+            '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
+            '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
+            '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
+            '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
+            '$'
+        ].join(''),
+        'g'
+    );
 
-    } else {
-            new RegExp(
-                [
-                    '(.|\\n)*?',
-                    '%%\\n',
-                    '```annotation-json\\n',
-                    '(?<annotationJson>(.|\\n)*?)\\n',
-                    '```\\n',
-                    '%%(.|\\n)*?\\*',
-                    '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
-                    '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
-                    '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
-                    '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
-                    '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
-                    '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
-                    '$'
-                ].join(''),
-                'g'
-          );
-    }
-
-}
+const makeAnnotationContentRegex = () =>
+    new RegExp(
+        [
+            '(.|\\n)*?',
+            '%%\\n',
+            '```annotation-json\\n',
+            '(?<annotationJson>(.|\\n)*?)\\n',
+            '```\\n',
+            '%%(.|\\n)*?\\*',
+            '(%%PREFIX%%(?<prefix>(.|\\n)*?))?',
+            '(%%HIGHLIGHT%%( ==)?(?<highlight>(.|\\n)*?)(== )?)?',
+            '(%%POSTFIX%%(?<postfix>(.|\\n)*?))?\\*\\n',
+            '(%%LINK%%(?<link>(.|\\n)*?)\\n)?',
+            '(%%COMMENT%%\\n(?<comment>(.|\\n)*?)\\n)?',
+            '(%%TAGS%%\\n(?<tags>(.|\\n)*))?',
+            '$'
+        ].join(''),
+        'g'
+    );
 
 export const getAnnotationHighlightTextData = (annotation: Annotation) => {
     let prefix = '';
@@ -161,7 +163,7 @@ const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSetti
 
 };
 
-export function getAnnotationFromFileContent(annotationId: string, fileContent: string): Annotation {
+export function getAnnotationFromFileContent(annotationId: string, fileContent: string, annotatorSettingsObject: IHasAnnotatorSettings): Annotation {
     const annotationRegex = makeAnnotationBlockRegex(annotationId);
     let m: RegExpExecArray;
 
@@ -172,7 +174,7 @@ export function getAnnotationFromFileContent(annotationId: string, fileContent: 
         const {
             groups: { annotationBlock, annotationId }
         } = m;
-        return getAnnotationFromAnnotationBlock(annotationBlock, annotationId);
+        return getAnnotationFromAnnotationBlock(annotationBlock, annotationId, annotatorSettingsObject);
     } else {
         return null;
     }
@@ -229,7 +231,7 @@ export function writeAnnotationToAnnotationFileString(
     }
 }
 
-export function loadAnnotationsAtUriFromFileText(url: URL | null, fileText: string | null): AnnotationList {
+export function loadAnnotationsAtUriFromFileText(url: URL | null, fileText: string | null, annotatorSettingsObject: IHasAnnotatorSettings): AnnotationList {
     const params = url ? Object.fromEntries(url.searchParams.entries()) : null;
     if (params?.uri == 'app://obsidian.md/index.html') {
         return { rows: [], total: 0 };
@@ -247,7 +249,7 @@ export function loadAnnotationsAtUriFromFileText(url: URL | null, fileText: stri
             const {
                 groups: { annotationBlock, annotationId }
             } = m;
-            const completeAnnotation = getAnnotationFromAnnotationBlock(annotationBlock, annotationId);
+            const completeAnnotation = getAnnotationFromAnnotationBlock(annotationBlock, annotationId, annotatorSettingsObject);
             const annotationDocumentIdentifiers = [
                 completeAnnotation.document?.documentFingerprint,
                 completeAnnotation.uri
