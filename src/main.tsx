@@ -30,6 +30,7 @@ import stringEncodedResourcesFolder from './resources!zipStringEncoded';
 import * as jszip from 'jszip';
 
 export default class AnnotatorPlugin extends Plugin implements IHasAnnotatorSettings {
+    static instance: AnnotatorPlugin = null;
     // @ts-ignore: initialized by loadSettings() in onloadImpl()
     settings: AnnotatorSettings;
     views: Set<AnnotatorView> = new Set();
@@ -54,6 +55,7 @@ export default class AnnotatorPlugin extends Plugin implements IHasAnnotatorSett
     setupPromise: Promise<void>;
 
     async onload() {
+        AnnotatorPlugin.instance = this;
         this.setupPromise = this.onloadImpl();
         await this.setupPromise;
     }
@@ -185,6 +187,7 @@ export default class AnnotatorPlugin extends Plugin implements IHasAnnotatorSett
 
     onunload() {
         this.unloadResources();
+        AnnotatorPlugin.instance = null;
     }
 
     async loadSettings() {
