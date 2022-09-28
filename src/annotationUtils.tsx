@@ -5,10 +5,9 @@ import { Annotation, AnnotationList } from 'types';
 
 
 const makeAnnotationBlockRegex = (annotationId?: string) => {
-    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownHighlight } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
     if (useCustomMarkdown) {
         return makeAnnotationBlockRegexCustom(annotationId);
-        //return makeAnnotationBlockRegexDefault(annotationId);
     } else {
         return makeAnnotationBlockRegexDefault(annotationId);
     }
@@ -24,7 +23,7 @@ const makeAnnotationBlockRegexDefault = (annotationId?: string) =>
     );
 
 const makeAnnotationBlockRegexCustom = (annotationId?:string) => {
-    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownHighlight } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
 
     const customMarkdownDictionaryRegex = {
         annotator_json: '(?<annotationJson>(.|\n)*?)',
@@ -37,27 +36,15 @@ const makeAnnotationBlockRegexCustom = (annotationId?:string) => {
         annotator_id: ')\\^(?<annotationId>' + (annotationId ?? '[a-zA-Z0-9]+') + ')\n'
     };
 
-    const newCustomMarkdownOutput = customMarkdownOutput.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-    const customMarkdownOutputReplaced = newCustomMarkdownOutput.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionaryRegex[matched])
-    return new RegExp('(?<annotationBlock>' + customMarkdownOutputReplaced, 'gm');
-    // return new RegExp(
-    //     '(?<annotationBlock>> \\[!annotation\\]\n> %%\n> ```annotation-json(\n>.*?)*?)\\^(?<annotationId>' +
-    //         (annotationId ?? '[a-zA-Z0-9]+') +
-    //         ')\n',
-    //     'gm'
-    // );
+    const newcustomMarkdownHighlight = customMarkdownHighlight.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+    const customMarkdownHighlightReplaced = newcustomMarkdownHighlight.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionaryRegex[matched])
+    return new RegExp('(?<annotationBlock>' + customMarkdownHighlightReplaced, 'gm');
 }
 
-//const makeAnnotationBlockRegexCustom = (annotationId?:string) =>
-//    new RegExp('(?<annotationBlock>' + makeAnnotationContentRegexCustom(annotationId) + ')', 'gm');
-        
-
 const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId: string): Annotation => {
-    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownHighlight } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
     if (useCustomMarkdown) {
         var contentRegex = makeAnnotationContentRegexCustom();
-        //var contentRegex = makeAnnotationContentRegex();
-        //var content = annotationBlock;
         var content = annotationBlock;
 
     } else {
@@ -67,18 +54,7 @@ const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId:
             .map(x => x.substr(1))
             .join('\n');
     }
-    console.log(annotationBlock);
-    //console.log((makeAnnotationBlockRegexDefault(annotationId).exec(fileContent));
-    //console.log(newRegex);
 
-    console.log(makeAnnotationBlockRegexDefault(annotationId));
-    console.log(makeAnnotationContentRegex());
-    console.log(makeAnnotationBlockRegexCustom(annotationId));
-    console.log(makeAnnotationContentRegexCustom());
-    //console.log(makeAnnotationBlockRegex(annotationId));
-    //console.log(annotationBlock);
-    //console.log(contentRegex.exex(content));
-    //console.log(newRegex.exex(content));
     const {
         groups: { annotationJson, prefix, highlight, postfix, comment, tags }
     } = contentRegex.exec(content);
@@ -104,7 +80,7 @@ const getAnnotationFromAnnotationBlock = (annotationBlock: string, annotationId:
 };
 
 const makeAnnotationContentRegexCustom = (annotationId?:string) => {
-    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownHighlight } = AnnotatorPlugin.instance.settings.customMarkdownSettings;
 
     const customMarkdownDictionaryRegex = {
         annotator_json: '(?<annotationJson>(.|\\n)*?)',
@@ -117,10 +93,10 @@ const makeAnnotationContentRegexCustom = (annotationId?:string) => {
         annotator_id: ''
     };
 
-    //const newCustomMarkdownOutput = customMarkdownOutput.replace(/(\n)/gi, '\\\\n');
-    const newnewCustomMarkdownOutput = customMarkdownOutput.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
-    const customMarkdownOutputReplaced = newnewCustomMarkdownOutput.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionaryRegex[matched])
-    return new RegExp(customMarkdownOutputReplaced, 'g');
+    //const newcustomMarkdownHighlight = customMarkdownHighlight.replace(/(\n)/gi, '\\\\n');
+    const newnewcustomMarkdownHighlight = customMarkdownHighlight.replace(/[-[\]/{}()*+?.\\^$|]/g, '\\$&');
+    const customMarkdownHighlightReplaced = newnewcustomMarkdownHighlight.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionaryRegex[matched])
+    return new RegExp(customMarkdownHighlightReplaced, 'g');
     //return new RegExp('> \\[!annotation\\]\\n> %%\\n> ```annotation\\-json\\n> (?<annotationJson>(.|\\n)*?)\\n> ```\\n> %%\\n> \\n> (?<tags>(.|\\n)*?)\\n> \\n> \\*"(?<highlight>(.|\\n)*?)"\\*\\n> \\n> (?<comment>(.|\\n)*?)\\n> \\n> → \\[\\[#\\^(?<link>(.|\\n)*?)\\|Source\\]\\]\\n','g');
 }
 
@@ -160,7 +136,7 @@ export const getAnnotationHighlightTextData = (annotation: Annotation) => {
 
 const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSettings) => {
     const { highlightHighlightedText, includePostfix, includePrefix } = plugin.settings.annotationMarkdownSettings;
-    const { useCustomMarkdown, customMarkdownInput, customMarkdownOutput } = plugin.settings.customMarkdownSettings;
+    const { useCustomMarkdown, customMarkdownHighlight } = plugin.settings.customMarkdownSettings;
     const { prefix, exact, suffix } = getAnnotationHighlightTextData(annotation);
 
     const customMarkdownDictionary = {
@@ -175,8 +151,8 @@ const makeAnnotationString = (annotation: Annotation, plugin: IHasAnnotatorSetti
     };
 
     if (useCustomMarkdown) {
-        var annotationString = customMarkdownOutput.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionary[matched]);
-        return annotationString;
+        var annotationString = customMarkdownHighlight.replace(/\b(?:annotator_json|annotator_tags|annotator_comment|annotator_highlightedText|annotator_prefix|annotator_postfix|annotator_link|annotator_id)\b/gi, matched => customMarkdownDictionary[matched]);
+        return '\n'+ annotationString + '\n';
 
     } else {
       var annotationString =

@@ -22,8 +22,7 @@ export interface AnnotatorSettings {
     };
     customMarkdownSettings: {
         useCustomMarkdown: boolean;
-        customMarkdownInput: string;
-        customMarkdownOutput: string;
+        customMarkdownHighlight: string;
     };
     annotateTvUrl?: string;
     debugLogging: boolean;
@@ -50,8 +49,7 @@ export const DEFAULT_SETTINGS: AnnotatorSettings = {
     },
     customMarkdownSettings: {
         useCustomMarkdown: false,
-        customMarkdownInput: '',
-        customMarkdownOutput: ''
+        customMarkdownHighlight: ''
     }
 
 };
@@ -195,20 +193,10 @@ export default class AnnotatorSettingsTab extends PluginSettingTab {
 
         new Setting(containerEl)
             .setName('Custom markdown format')
-            .setDesc('Custom input text:')
+            .setDesc('Example: ```> [!annotation]> %%> ```annotation-json> annotator_json> ```> %%> > annotator_tags> > *"annotator_highlightedText"*> > annotator_comment> > → [[#^annotator_link|Source]]> annotator_id```')
             .addTextArea(text =>
-                text.setValue(this.plugin.settings.customMarkdownSettings.customMarkdownInput).onChange(async value => {
-                    this.plugin.settings.customMarkdownSettings.customMarkdownInput = value;
-                    await this.plugin.saveSettings();
-                })
-            );
-
-        new Setting(containerEl)
-            .setName('Custom markdown format')
-            .setDesc('Custom output text:')
-            .addTextArea(text =>
-                text.setValue(this.plugin.settings.customMarkdownSettings.customMarkdownOutput).onChange(async value => {
-                    this.plugin.settings.customMarkdownSettings.customMarkdownOutput = value;
+                text.setValue(this.plugin.settings.customMarkdownSettings.customMarkdownHighlight).onChange(async value => {
+                    this.plugin.settings.customMarkdownSettings.customMarkdownHighlight = value;
                     await this.plugin.saveSettings();
                 })
             );
